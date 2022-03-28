@@ -9,9 +9,13 @@
     --row-col-number : 10;
     --background-aqua: rgb(127, 255, 212);
     --background-lightblue : rgb(100,149,237);
+    --background-boom : rgb(255, 0, 0);
     --border-color : #000;
     --text-white : #fff;
-    --background-boom : rgb(255, 0, 0);
+}
+
+.d-none {
+    display: none;
 }
 /* HEADER */
 header {
@@ -29,13 +33,23 @@ header {
 
 div.logo,
 div.container-difficulty {
-    width: 50%;
+    /* width: 50%; */
     display: flex;
     align-items: center;
 }
 
 div.logo > img {
     margin-right: 20px;
+}
+
+#counter {
+    width: 80px;
+    height: 70%;
+    border: 2px solid black;
+    font-size: 3em;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 div.container-difficulty {

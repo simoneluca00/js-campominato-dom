@@ -1,84 +1,184 @@
-// dichiarazione btn play
-let btnPlay = document.getElementById("btn_play");
+// bottone di inizio
+let start = document.getElementById("btn_play");
 
-// dichiarazione btn reset
+// bottone di reset
 let reset = document.getElementById("btn_refresh");
 
 // dichiarazione input select
 let difficulty = document.getElementById("difficulty");
 
-// dichiarazione container output
-let containerOutput = document.getElementById("containerOutput");
+// dichiarazione counter clicks
+let counterClicks = document.getElementById('counter');
 
-// dichiarazione contenitore celle (griglia)
-let containerGrid = document.createElement('div');
+// numero di click
+let clicks = 0;
 
-// dichiarazione celle 
-let cell = document.createElement('div');
+// contenitore principale HTML
+let containerOutput = document.getElementById('containerOutput');
+
+// griglia e celle
+let grid;
+let cell;
 
 // numero di celle da stampare nella griglia
-let numeroBox = 0;
+let boxNumber = 0;
 
-// array vuoto che dovrà contenere i numeri da 1 a "numeroBox" da stampare per ogni cella
-let numberCell = [];
+// array vuoto per numeri già stampati una volta
+let shuffledNumbers =[];
 
-// array vuoto per le 16 "bombe"
-var sediciBombe = [];
+// array vuoto che contiene le 16 bombe casuali
+let sediciBombe = [];
 
+// ANCHOR evento al click del btn PLAY (inizia il gioco)
+start.addEventListener('click', function(){
 
-
-//------------------------------------ funzione al click ------------------------------------//
-btnPlay.addEventListener("click", function(){
+    play();    
+    // viene impostata la difficoltà e di conseguenza il numero delle celle per lato
+    // checkDifficulty();
     
-    // condizioni in base alla difficoltà
-    if ( difficulty.value === 'Easy' ) {
-        numeroBox = 100;
-    } else if ( difficulty.value === 'Medium' ) {
-        numeroBox = 81;
-        // viene modificato lo stile dell'intero documento
-        document.documentElement.style.setProperty('--row-col-number', '9');
-    } else if ( difficulty.value === 'Hard' ) {
-        numeroBox = 49;
-        // viene modificato lo stile dell'intero documento
-        document.documentElement.style.setProperty('--row-col-number', '7');
-    }
+    // viene generata la griglia con le rispettive celle per ogni difficoltà
+    // generateGrid();
 
-    // dichiarazione contenitore celle (griglia)
-    let containerGrid = document.createElement('div');
-    containerGrid.classList.add('grid');
-    containerOutput.appendChild(containerGrid);
+    // generare le 16 bombe
+    // generateBombs ();
 
-    // ciclo per pushare in ordine i numeri nell'array "numberCell"
-    for (let k = 1; k <= numeroBox; k++) {
-        numberCell.push(k);
-    }
-    // dichiarazione variabile contenente ordine casuale dei valori da 1 a "numeroBox"
-    numberCell = shuffle(numberCell);
+    // clickCell();
 
-    // array per estrarre i primi 16 valori (bombe)
-    sediciBombe = numberCell.slice(0,16);
-    console.log(sediciBombe)
-
-    // celle e numeri da stampare
-    for (let i = 1; i <= numeroBox; i++) {
-        let cell = document.createElement('div');
-        cell.classList.add('box');
-        containerGrid.appendChild(cell);
-
-        cell.innerHTML += `${i}`;
-    
-        cell.addEventListener('click', clickCell);
-        // console.log(clickCell)
-    }
-    
-},{once:true}
-) 
-
-// evento al click refresh pagina (reset)
-reset.addEventListener('click', function(){
-    location.reload();
-}
+}, {once:true}
 )
+
+// evento al click del btn RESET (si ricarica la pagina)
+reset.addEventListener('click', function(){
+    location.reload()
+})
+
+
+// funzione che fa partire il gioco (quando si clicca PLAY)
+function play(){
+    console.log("game started")
+
+    // numero di tentativi
+    const attempts = [];
+
+    const cellNumber = checkDifficulty();
+    console.log(cellNumber);
+
+    // funzione per impostare la difficoltà e di conseguenza le dimensioni della griglia
+    function checkDifficulty(){
+        if ( difficulty.value === 'Easy' ) {
+            boxNumber = 100;
+            return boxNumber
+        } else if ( difficulty.value === 'Medium' ) {
+            boxNumber = 81;
+            // viene modificato lo stile dell'intero documento
+            document.documentElement.style.setProperty('--row-col-number', '9');
+            return boxNumber
+        } else if ( difficulty.value === 'Hard' ) {
+            boxNumber = 49;
+            // viene modificato lo stile dell'intero documento
+            document.documentElement.style.setProperty('--row-col-number', '7');
+            return boxNumber
+        }
+    }
+
+    generateGrid();
+
+    // funzione per generare le griglie e le celle al suo interno (con ciclo FOR)
+    function generateGrid(){
+        const grid = document.createElement('div');
+        grid.className = 'grid';
+        containerOutput.appendChild(grid);
+        
+        for (let i = 1; i <= boxNumber; i++) {
+                    
+            const cell = document.createElement('div');
+            cell.className = 'box';
+            grid.appendChild(cell);
+
+            // array con numeri da 1 a boxNumber
+            shuffledNumbers.push(i);
+            
+            // stampare i numeri all'interno delle celle in HTML
+            cell.innerHTML += `${i}`;
+
+            cell.addEventListener('click', clickCell); 
+        }
+        
+        shuffledNumbers = shuffle(shuffledNumbers);
+        return cell;
+    }
+
+    const bombs = generateBombs();
+    console.log(bombs);
+    
+    // funzione per generare le 16 bombe
+    function generateBombs () {
+        // array per estrarre i primi 16 valori (bombe)
+        sediciBombe = shuffledNumbers.slice(0,16);
+
+        // riordinare le bombe in ordine crescente nell'array
+        sediciBombe = sediciBombe.sort( function compare(a,b){
+            return a - b;
+        })
+
+        return sediciBombe;
+    }
+
+    // funzione all'evento click sulle celle --> condizione per verificare se è o non è una bomba
+    function clickCell () {
+
+        // selezione del numero contenuto nella singola cella sulla quale si clicca
+        const cellNumber = parseInt(this.innerHTML);
+
+        if (sediciBombe.includes(cellNumber)) {
+            // fine del gioco se si clicca su una bomba
+            endGame()
+            
+            // aggiunta classe alla cella (NO BOMBA)
+        } else if (!attempts.includes(cellNumber)) {
+            this.classList.add('clicked');
+            
+            // numero pushato all'interno dell'array "attempts"
+            attempts.push(cellNumber);
+
+            // si rimuove l'evento al click per le celle già cliccate
+            this.removeEventListener('click', clickCell);
+
+            // contatore di click sulle celle che non sono bombe
+            clicks += 1;
+            counterClicks.innerHTML = clicks;
+        } 
+    }
+
+    // funzione per far terminare il gioco 
+    function endGame () {
+
+        // quando si una il "querySelectorAll" bisogna ciclare la variabile (che in questo caso è 
+        // un array di dei div con classe "box") perchè si deve definire cosa fare su ogni singolo elemento        
+        const boxes = document.querySelectorAll('.box');
+
+        for (let i = 1, boxValue = boxes.length; i <= boxValue; i++) {
+            
+            // nuova variabile per ogni singolo elemento dell'array
+            const box = boxes[i - 1];
+
+            if (sediciBombe.includes(i)) {
+                box.classList.add('boom');
+            }
+            
+            box.removeEventListener('click', clickCell)
+        }
+
+    }
+}
+
+// funzione per generare numeri random
+function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+
+    return Math.floor(Math.random() * (max - min + 1) + min);
+}
 
 // algoritmo Fisher-Yates shuffle --> funzione per ordinare in modo casuale gli elementi di un'array
 function shuffle(array) {
@@ -87,14 +187,4 @@ function shuffle(array) {
       [array[a], array[j]] = [array[j], array[a]];
     }
     return array
-}
-
-// funzione all'evento click sulle celle --> condizione per verificare se è o non è una bomba
-function clickCell () {
-    if (sediciBombe.includes(parseInt(this.innerHTML))) {
-        cell.removeEventListener("click", clickCell);
-        this.classList.add('boom');
-    } else {
-        this.classList.add('clicked');
-    }
 }
